@@ -1,10 +1,12 @@
 import { api } from '@/services/api/axios'
 import type {
-  AuditEntry, IcccEvent, Officer, OfficerInput, Pass, Settings, User, UserInput, Vehicle, VehicleInput, Ward,
+  AuditEntry, IcccEvent, Officer, OfficerInput, Pass, Settings, User, UserInput, Vehicle, VehicleInput, Ward, WardImportBody,
 } from '@/types/api'
 
 export const wardsApi = {
   list: () => api.get<{ count: number; wards: Ward[] }>('/wards').then((r) => r.data.wards),
+  // boundaries can be large (thousands of points), so give the import more time than the default 20 s
+  import: (b: WardImportBody) => api.post<Record<string, unknown>>('/wards/import', b, { timeout: 120_000 }).then((r) => r.data),
 }
 
 export const officersApi = {

@@ -2,10 +2,23 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/services/api/axios'
 import { useLiveInterval } from '@/store/uiStore'
-import type { OfficerInput, Settings, UserInput, VehicleInput } from '@/types/api'
+import type { OfficerInput, Settings, UserInput, VehicleInput, WardImportBody } from '@/types/api'
 import { auditApi, icccApi, officersApi, passesApi, settingsApi, usersApi, vehiclesApi, wardsApi } from '../api/adminApi'
 
 export const useWards = () => useQuery({ queryKey: ['wards'], queryFn: wardsApi.list, staleTime: 10 * 60_000 })
+
+export const useImportWards = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (b: WardImportBody) => wardsApi.import(b),
+    onSuccess: (r) => {
+      const n = [r.imported, r.count, r.inserted, r.wards].find((v) => typeof v === 'number')
+      toast.success(n != null ? `Ward import complete · ${n} ward${n === 1 ? '' : 's'}` : 'Ward import complete')
+      qc.invalidateQueries({ queryKey: ['wards'] })
+      qc.invalidateQueries({ queryKey: ['reports'] })
+    },
+  })
+}
 
 export const useOfficers = (p: { ward_code?: string; active_only?: boolean } = {}, enabled = true) =>
   useQuery({ queryKey: ['officers', p], queryFn: () => officersApi.list(p), enabled })

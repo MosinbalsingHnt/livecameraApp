@@ -160,6 +160,20 @@ export interface Ward {
   source: string
 }
 
+/** POST /wards/import — GeoJSON FeatureCollection of ward boundaries plus how to read it. */
+export interface WardImportBody {
+  geojson: { type: 'FeatureCollection'; features: unknown[] }
+  /** property holding the ward name */
+  name_field: string
+  /** property holding the ward code; when null, codes are generated as <code_prefix><NN> */
+  code_field: string | null
+  code_prefix: string
+  city: string | null
+  source: string | null
+  /** true wipes the existing wards first */
+  replace: boolean
+}
+
 export interface Officer {
   officer_id: number
   name: string

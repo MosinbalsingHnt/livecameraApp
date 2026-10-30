@@ -29,11 +29,12 @@ export function AppShell() {
   const newCount = stats.data?.cards.new ?? 0
 
   return (
-    <div className="flex min-h-screen flex-col lg:flex-row">
-      <aside className="flex shrink-0 items-center gap-1 overflow-x-auto bg-rail p-2 text-rail-foreground lg:sticky lg:top-0 lg:h-screen lg:w-60 lg:flex-col lg:items-stretch lg:p-3">
-        <div className="mr-2 flex items-center gap-2.5 px-2 py-1 lg:mb-4 lg:mr-0 lg:py-2">
-          <span className="grid size-9 place-items-center rounded-xl bg-brand text-brand-foreground"><Trash2 className="size-5" /></span>
-          <div className="hidden leading-tight lg:block">
+    <div className="flex min-h-dvh flex-col lg:flex-row">
+      {/* <1024 top bar · 1024-1279 icon rail · >=1280 full sidebar (wider on big panels) */}
+      <aside className="flex shrink-0 items-center gap-1 overflow-x-auto bg-rail p-2 text-rail-foreground lg:sticky lg:top-0 lg:h-dvh lg:w-[4.5rem] lg:flex-col lg:items-stretch lg:overflow-y-auto lg:overflow-x-hidden lg:p-3 xl:w-56 2xl:w-64">
+        <div className="mr-2 flex items-center gap-2.5 px-2 py-1 lg:mb-4 lg:mr-0 lg:justify-center lg:px-0 lg:py-2 xl:justify-start xl:px-2">
+          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-brand text-brand-foreground"><Trash2 className="size-5" /></span>
+          <div className="hidden leading-tight xl:block">
             <p className="text-sm font-bold text-white">Garbage Control Room</p>
             <p className="text-[11px] opacity-70">PCMC · AI road detection</p>
           </div>
@@ -42,18 +43,19 @@ export function AppShell() {
           <NavLink
             key={to}
             to={to}
+            title={label}
             className={({ isActive }) =>
-              cn('flex shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-white/5', isActive && 'bg-rail-active font-semibold text-white')
+              cn('relative flex shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-white/5 lg:max-xl:justify-center', isActive && 'bg-rail-active font-semibold text-white')
             }
           >
             <Icon className="size-5 shrink-0" />
-            <span>{label}</span>
+            <span className="lg:max-xl:sr-only">{label}</span>
             {to === '/alerts' && newCount > 0 && (
-              <span className="ml-auto rounded-full bg-accent px-2 py-px text-[11px] font-bold text-[#04202c]">{newCount}</span>
+              <span className="ml-auto rounded-full bg-accent px-2 py-px text-[11px] font-bold text-[#04202c] lg:max-xl:absolute lg:max-xl:right-0.5 lg:max-xl:top-0.5 lg:max-xl:px-1.5 lg:max-xl:text-[10px]">{newCount}</span>
             )}
           </NavLink>
         ))}
-        <p className="mt-auto hidden px-3 py-2 text-[11px] leading-relaxed opacity-60 lg:block">
+        <p className="mt-auto hidden px-3 py-2 text-[11px] leading-relaxed opacity-60 xl:block">
           Hare &amp; Turtle AI Solutions
           <br />
           Map © OpenStreetMap contributors
@@ -61,7 +63,7 @@ export function AppShell() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex flex-wrap items-center gap-x-3 gap-y-2 border-b bg-card px-4 py-3 lg:px-6">
+        <header className="sticky top-0 z-20 flex flex-wrap items-center gap-x-3 gap-y-2 border-b bg-card px-4 py-3 lg:px-6 2xl:px-8">
           <h1 className="text-lg font-bold lg:text-xl">{title}</h1>
           <span className="flex-1" />
           <span className="inline-flex items-center gap-2 rounded-full bg-brand-soft px-3 py-1 text-xs font-semibold">
@@ -88,7 +90,7 @@ export function AppShell() {
             </Button>
           </div>
         </header>
-        <main className="w-full max-w-[1600px] flex-1 p-4 lg:p-6">
+        <main className="mx-auto w-full max-w-[1600px] flex-1 p-4 lg:p-5 xl:p-6 2xl:max-w-[1880px] 2xl:p-8">
           <Outlet />
         </main>
       </div>

@@ -41,7 +41,7 @@ export default function LoginPage() {
     'h-11 w-full rounded-xl border border-white/15 bg-white/10 pl-10 pr-3 text-sm text-white placeholder:text-white/40 transition focus:border-accent focus:bg-white/15 focus:outline-none focus:ring-2 focus:ring-accent/40'
 
   return (
-    <div className="relative flex min-h-screen overflow-hidden bg-[#06130d] text-white" onMouseMove={onMove}>
+    <div className="relative flex min-h-dvh overflow-hidden bg-[#06130d] text-white" onMouseMove={onMove}>
       <div
         ref={bgRef}
         className="absolute inset-0 bg-cover bg-center transition-transform duration-300 ease-out"
@@ -50,7 +50,7 @@ export default function LoginPage() {
       {/* darken left side for text legibility */}
       <div className="absolute inset-0 bg-gradient-to-r from-[#06130d]/90 via-[#06130d]/55 to-[#06130d]/20" />
 
-      <div className="relative mx-auto grid w-full max-w-7xl items-center gap-10 px-5 py-10 lg:grid-cols-[1.15fr_1fr] lg:px-10">
+      <div className="relative mx-auto grid w-full max-w-7xl items-center gap-10 px-5 py-6 lg:grid-cols-[1.15fr_1fr] lg:px-10 xl:py-10 2xl:max-w-[90rem]">
         <section className="hidden lg:block">
           <div className="mb-10 flex items-center gap-3">
             <span className="grid size-12 place-items-center rounded-2xl bg-brand text-brand-foreground shadow-lg shadow-brand/30"><Trash2 className="size-6" /></span>
@@ -59,11 +59,11 @@ export default function LoginPage() {
               <p className="text-xs text-white/60">PCMC · AI road detection</p>
             </div>
           </div>
-          <h1 className="max-w-xl text-5xl font-bold leading-[1.1] tracking-tight">
+          <h1 className="max-w-xl text-4xl font-bold leading-[1.1] tracking-tight xl:text-5xl">
             Cleaner roads,<br />
             <span className="bg-gradient-to-r from-[#7ee08a] to-accent bg-clip-text text-transparent">found by AI,</span> cleared on time.
           </h1>
-          <ul className="mt-10 max-w-lg space-y-5">
+          <ul className="mt-8 max-w-lg space-y-4 xl:mt-10 xl:space-y-5">
             {FEATURES.map(({ icon: Icon, title, text }) => (
               <li key={title} className="flex gap-4">
                 <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-white/15 bg-white/10 backdrop-blur"><Icon className="size-5 text-[#7ee08a]" /></span>

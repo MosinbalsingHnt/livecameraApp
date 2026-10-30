@@ -24,8 +24,8 @@ export function Dialog({ open, onOpenChange, title, description, children, varia
           className={cn(
             'fixed z-50 overflow-y-auto bg-background shadow-2xl',
             variant === 'sheet'
-              ? 'inset-y-0 right-0 w-full max-w-4xl p-4 sm:p-5'
-              : 'left-1/2 top-1/2 max-h-[90vh] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border bg-card p-5',
+              ? 'inset-y-0 right-0 w-full max-w-4xl p-4 sm:p-5 2xl:max-w-5xl'
+              : 'left-1/2 top-1/2 max-h-[90dvh] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border bg-card p-5',
             className,
           )}
         >

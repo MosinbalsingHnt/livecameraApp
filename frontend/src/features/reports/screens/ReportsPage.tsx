@@ -43,7 +43,7 @@ export default function ReportsPage() {
           <div className="w-36"><Select value={days} onChange={setDays} aria-label="Range" options={[{ value: '7', label: 'Last 7 days' }, { value: '14', label: 'Last 14 days' }, { value: '30', label: 'Last 30 days' }]} /></div>
         </div>
         {daily.isLoading ? <Skeleton className="h-72" /> : !daily.data?.length ? <EmptyState title="No data for this range" /> : (
-          <div className="h-72">
+          <div className="h-64 xl:h-72 2xl:h-96">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={daily.data.map((d) => ({ ...d, day: fmtDay(d.date) }))} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />

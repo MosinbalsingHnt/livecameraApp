@@ -7,7 +7,7 @@ export function KpiCards() {
   const { data, isLoading } = useStats()
   if (isLoading || !data) {
     return (
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 2xl:grid-cols-8">
         {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-24" />)}
       </div>
     )
@@ -24,7 +24,7 @@ export function KpiCards() {
     { label: 'Vehicles online', value: `${c.vehicles_online} / ${c.vehicles_registered}`, icon: Truck, tone: '' },
   ]
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-4 2xl:grid-cols-8">
       {tiles.map(({ label, value, icon: Icon, tone }) => (
         <div key={label} className="rounded-2xl border bg-card p-3.5 shadow-sm">
           <div className="flex items-center justify-between gap-2">

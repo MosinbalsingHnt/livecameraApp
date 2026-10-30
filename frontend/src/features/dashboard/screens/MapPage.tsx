@@ -54,8 +54,8 @@ export default function MapPage() {
   const open = all.filter((a) => OPEN_STATUSES.includes(a.status))
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[1fr_340px]">
-      <div className="relative h-[calc(100vh-9rem)] min-h-[440px] overflow-hidden rounded-2xl border shadow-sm">
+    <div className="grid gap-4 xl:grid-cols-[1fr_20rem] 2xl:grid-cols-[1fr_24rem]">
+      <div className="relative h-[calc(100dvh-9rem)] min-h-[420px] overflow-hidden rounded-2xl border shadow-sm lg:h-[calc(100dvh-7rem)] 2xl:h-[calc(100dvh-8rem)]">
         <MapContainer center={target ?? PUNE} zoom={14} className="size-full" scrollWheelZoom>
           <TileLayer url={OSM_URL} attribution={OSM_ATTR} />
           <Camera target={target} points={points} />
@@ -108,7 +108,7 @@ export default function MapPage() {
         <Card className="p-0">
           <p className="border-b px-4 py-3 font-semibold">Open alerts ({open.length})</p>
           {open.length === 0 ? <EmptyState title="No open alerts" /> : (
-            <ul className="max-h-[50vh] divide-y overflow-y-auto">
+            <ul className="max-h-[40dvh] divide-y overflow-y-auto xl:max-h-[calc(100dvh-26rem)] xl:min-h-40">
               {open.map((a) => (
                 <li key={a.alert_id}>
                   <button

@@ -1,15 +1,13 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import { Badge } from '../../../components/Badge';
 import { Button } from '../../../components/Button';
 import { Card } from '../../../components/Card';
 import { colors, type } from '../../../theme';
 import type { LocalSession, SessionState } from '../../../types';
-import { resumeSession } from '../../record/services/uploader';
+import { APP_STARTED_AT } from '../../../utils/time';
+import { clearSession, resumeSession } from '../../record/services/uploader';
 import { useSessionStatus } from '../api/useSessionStatus';
-
-// a 'live' session from before this launch was killed mid-drive
-const APP_STARTED_AT = new Date().toISOString();
 
 const tones: Record<SessionState, { fg: string; bg: string; label: string }> = {
   live: { fg: colors.danger, bg: colors.dangerSoft, label: 'Live' },
@@ -36,6 +34,20 @@ export const SessionCard = ({ session }: { session: LocalSession }) => {
     session.state === 'failed' ||
     (session.state === 'live' && session.videoStartedAtUtc < APP_STARTED_AT);
 
+  // the session being recorded right now cannot be deleted
+  const recordingNow =
+    session.state === 'live' && !session.stopped && session.videoStartedAtUtc >= APP_STARTED_AT;
+
+  const confirmDelete = () =>
+    Alert.alert(
+      'Delete this session?',
+      `${session.sessionId}\nIts video files are removed from the phone. Anything not yet uploaded is lost.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: () => clearSession(session.sessionId) },
+      ],
+    );
+
   return (
     <Card style={styles.card}>
       <View style={styles.head}>
@@ -56,10 +68,21 @@ export const SessionCard = ({ session }: { session: LocalSession }) => {
       {session.alerts.length > 0 && (
         <Text style={styles.alerts}>Alerts: {session.alerts.join(', ')}</Text>
       )}
+      {session.uploading ? (
+        <Text style={styles.alerts}>
+          Uploading chunk {session.uploading.index}… {session.uploading.percent}%
+        </Text>
+      ) : null}
+      {session.lastUpload ? <Text style={styles.alerts}>{session.lastUpload}</Text> : null}
       {session.lastError ? <Text style={styles.err} numberOfLines={2}>{session.lastError}</Text> : null}
-      {needsRetry && (
-        <View style={{ marginTop: 14 }}>
-          <Button title="Retry upload" onPress={() => resumeSession(session.sessionId)} />
+      {(needsRetry || !recordingNow) && (
+        <View style={styles.actions}>
+          {needsRetry && (
+            <Button flex title="Retry upload" onPress={() => resumeSession(session.sessionId)} />
+          )}
+          {!recordingNow && (
+            <Button flex variant="secondary" title="Delete" onPress={confirmDelete} />
+          )}
         </View>
       )}
     </Card>
@@ -75,6 +98,7 @@ const styles = StyleSheet.create({
   stats: { flexDirection: 'row', marginTop: 14 },
   statLabel: { ...type.caption, color: colors.muted },
   statValue: { color: colors.text, fontSize: 18, fontWeight: '800', marginTop: 4 },
+  actions: { flexDirection: 'row', gap: 12, marginTop: 14 },
   alerts: { color: colors.muted, marginTop: 12, fontSize: 12 },
   err: { color: colors.warn, marginTop: 10, fontSize: 12 },
 });

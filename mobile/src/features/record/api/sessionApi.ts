@@ -16,6 +16,7 @@ export const uploadChunk = async (v: {
   sessionId: string;
   index: number;
   path: string;
+  onProgress?: (percent: number) => void;
 }) => {
   const form = new FormData();
   form.append('file', {
@@ -23,12 +24,25 @@ export const uploadChunk = async (v: {
     name: `chunk_${v.index}.mp4`,
     type: 'video/mp4',
   } as any);
-  return (
-    await http.post(`/sessions/${v.sessionId}/chunks/${v.index}`, form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-      timeout: 600_000,
-    })
-  ).data;
+  const t0 = Date.now();
+  let tSent = 0;
+  const res = await http.post(`/sessions/${v.sessionId}/chunks/${v.index}`, form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 600_000,
+    onUploadProgress: e => {
+      if (!tSent && e.total && e.loaded >= e.total) tSent = Date.now();
+      if (e.total) v.onProgress?.(Math.round((e.loaded / e.total) * 100));
+    },
+  });
+  const t1 = Date.now();
+  const sendMs = (tSent || t1) - t0; // phone -> server (network)
+  const serverMs = t1 - (tSent || t1); // server busy before it answered (backend)
+  const mb = (res.data?.video_bytes ?? 0) / 1048576;
+  const info =
+    `chunk ${v.index}: ${mb.toFixed(1)} MB, sent in ${(sendMs / 1000).toFixed(1)} s ` +
+    `(${(mb / Math.max(sendMs / 1000, 0.1)).toFixed(2)} MB/s), server replied after ${(serverMs / 1000).toFixed(1)} s`;
+  console.log('[upload]', info);
+  return { ...res.data, info };
 };
 
 export const appendGps = async (v: { sessionId: string; points: GpsPoint[] }) =>

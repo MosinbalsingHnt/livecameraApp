@@ -36,6 +36,10 @@ export type LocalSession = {
   eventsFound: number;
   alerts: string[];
   lastError?: string;
+  /** timing of the most recent chunk upload, to tell network from server slowness */
+  lastUpload?: string;
+  /** live progress of the chunk currently uploading */
+  uploading?: { index: number; percent: number };
 };
 
 export type ServerSessionStatus = {

@@ -10,6 +10,7 @@ type SessionsState = {
   upsertChunk: (id: string, c: ChunkRecord) => void;
   patchChunk: (id: string, index: number, p: Partial<ChunkRecord>) => void;
   appendGps: (id: string, p: GpsPoint) => void;
+  remove: (ids: string[]) => void;
   removeSentGps: (id: string, lastT: number) => void;
 };
 
@@ -44,6 +45,12 @@ export const useSessionsStore = create<SessionsState>()(
             gpsPending: [...s.gpsPending, p],
             gpsTotalLogged: s.gpsTotalLogged + 1,
           })),
+        remove: ids =>
+          set(st => {
+            const sessions = { ...st.sessions };
+            ids.forEach(id => delete sessions[id]);
+            return { sessions };
+          }),
         // drop points up to and including lastT (already confirmed by server)
         removeSentGps: (id, lastT) =>
           update(id, s => ({

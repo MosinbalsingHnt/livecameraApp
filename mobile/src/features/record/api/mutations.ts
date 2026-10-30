@@ -9,7 +9,7 @@ export const createSessionMutation: Opts<unknown, Parameters<typeof api.createSe
   mutationFn: api.createSession,
 };
 
-export const uploadChunkMutation: Opts<unknown, { sessionId: string; index: number; path: string }> = {
+export const uploadChunkMutation: Opts<unknown, Parameters<typeof api.uploadChunk>[0]> = {
   mutationKey: ['session', 'chunk'],
   mutationFn: api.uploadChunk,
 };

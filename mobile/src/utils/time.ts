@@ -10,5 +10,8 @@ export const formatElapsed = (ms: number) => {
   return `${pad(Math.floor(s / 3600))}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
 };
 
+/** Sessions still 'live' from before this launch were killed mid-drive. */
+export const APP_STARTED_AT = new Date().toISOString();
+
 export const sleep = (ms: number) =>
   new Promise<void>(resolve => setTimeout(resolve, ms));

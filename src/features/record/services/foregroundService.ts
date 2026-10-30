@@ -27,6 +27,9 @@ export const startForegroundService = async () => {
     taskDesc: 'Recording video + GPS and uploading to the AI engine',
     taskIcon: { name: 'ic_launcher', type: 'mipmap' },
     color: '#2f9e44',
+    // Android 14+ (targetSdk 34+) rejects a foreground service without a type;
+    // must match android:foregroundServiceType in AndroidManifest.xml
+    foregroundServiceType: ['camera', 'location'],
     parameters: {},
   });
 };

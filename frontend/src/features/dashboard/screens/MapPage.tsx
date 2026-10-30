@@ -55,7 +55,7 @@ export default function MapPage() {
 
   return (
     <div className="grid gap-4 xl:grid-cols-[1fr_20rem] 2xl:grid-cols-[1fr_24rem]">
-      <div className="relative h-[calc(100dvh-9rem)] min-h-[420px] overflow-hidden rounded-2xl border shadow-sm lg:h-[calc(100dvh-7rem)] 2xl:h-[calc(100dvh-8rem)]">
+      <div className="relative isolate z-0 h-[calc(100dvh-9rem)] min-h-[420px] overflow-hidden rounded-2xl border shadow-sm lg:h-[calc(100dvh-7rem)] 2xl:h-[calc(100dvh-8rem)]">
         <MapContainer center={target ?? PUNE} zoom={14} className="size-full" scrollWheelZoom>
           <TileLayer url={OSM_URL} attribution={OSM_ATTR} />
           <Camera target={target} points={points} />

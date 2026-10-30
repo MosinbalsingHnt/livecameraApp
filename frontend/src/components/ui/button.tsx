@@ -3,6 +3,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { Loader2 } from 'lucide-react'
 import * as React from 'react'
 import { cn } from '@/lib/utils'
+import { Tooltip } from './tooltip'
 
 const buttonVariants = cva(
   'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-colors disabled:pointer-events-none disabled:opacity-50',
@@ -29,11 +30,14 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild, loading, children, disabled, ...props }, ref) => {
     const Comp = asChild ? Slot : 'button'
-    return (
+    const button = (
       <Comp ref={ref} className={cn(buttonVariants({ variant, size }), className)} disabled={disabled || loading} {...props}>
         {asChild ? children : (<>{loading && <Loader2 className="size-4 animate-spin" />}{children}</>)}
       </Comp>
     )
+    // an icon-only button has no visible text, so its aria-label doubles as the hover hint
+    const hint = size === 'icon' && !asChild ? props['aria-label'] : undefined
+    return hint ? <Tooltip label={hint}>{button}</Tooltip> : button
   },
 )
 Button.displayName = 'Button'

@@ -1,3 +1,4 @@
+import ReactNativeBlobUtil from 'react-native-blob-util';
 import { http } from '../../../services/api';
 import type { GpsPoint, ServerSessionStatus } from '../../../types';
 
@@ -24,16 +25,25 @@ export const uploadChunk = async (v: {
     name: `chunk_${v.index}.mp4`,
     type: 'video/mp4',
   } as any);
+  // some RN builds report no `total`; fall back to the file size (multipart overhead is tiny)
+  const fileBytes = await ReactNativeBlobUtil.fs
+    .stat(v.path.replace('file://', ''))
+    .then(s => Number(s.size))
+    .catch(() => 0);
   const t0 = Date.now();
   let tSent = 0;
   const res = await http.post(`/sessions/${v.sessionId}/chunks/${v.index}`, form, {
     headers: { 'Content-Type': 'multipart/form-data' },
     timeout: 600_000,
     onUploadProgress: e => {
-      if (!tSent && e.total && e.loaded >= e.total) tSent = Date.now();
-      if (e.total) v.onProgress?.(Math.round((e.loaded / e.total) * 100));
+      const total = e.total || fileBytes;
+      if (!total) return;
+      if (!tSent && e.loaded >= total) tSent = Date.now();
+      // 99 max here: 100 is reported only once the server has answered
+      v.onProgress?.(Math.min(99, Math.round((e.loaded / total) * 100)));
     },
   });
+  v.onProgress?.(100);
   const t1 = Date.now();
   const sendMs = (tSent || t1) - t0; // phone -> server (network)
   const serverMs = t1 - (tSent || t1); // server busy before it answered (backend)

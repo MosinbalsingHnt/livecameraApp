@@ -57,7 +57,9 @@ export const UploadProgress = ({ session, compact }: { session: LocalSession; co
 
   // overall fraction = finished chunks + the part of the chunk being sent
   const part = session.uploading ? session.uploading.percent / 100 : 0;
-  let frac = total ? Math.min((uploaded + part) / total, 1) : 0;
+  // while recording, `total` keeps growing, so the bar tracks the chunk being sent instead
+  const recording = session.state === 'live';
+  let frac = recording && session.uploading ? part : total ? Math.min((uploaded + part) / total, 1) : 0;
   if (mode === 'done' || mode === 'processing') frac = 1;
   else if (mode === 'uploading' && frac < 0.03) frac = 0.03;
 
@@ -93,7 +95,8 @@ export const UploadProgress = ({ session, compact }: { session: LocalSession; co
     : mode === 'done' ? 'All chunks uploaded'
     : mode === 'failed' ? 'Server processing failed'
     : `${uploaded}/${total} uploaded`;
-  const pct = `${Math.round(frac * 100)}%`;
+  // big number: the chunk in flight while uploading, otherwise the overall figure
+  const pct = `${mode === 'uploading' ? session.uploading!.percent : Math.round(frac * 100)}%`;
   const size = compact ? 28 : 36;
 
   return (
@@ -160,7 +163,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill, borderWidth: 2,
   },
   title: { ...type.body, flex: 1, fontWeight: '700' },
-  pct: { fontSize: 14, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  pct: { fontSize: 20, fontWeight: '800', fontVariant: ['tabular-nums'], minWidth: 56, textAlign: 'right' },
   track: {
     height: 8, borderRadius: 4, marginTop: 10,
     backgroundColor: colors.surfaceAlt, overflow: 'hidden',

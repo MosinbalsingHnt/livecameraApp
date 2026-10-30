@@ -5,6 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { queryClient } from './services/api';
 import { lockOrientation } from './services/orientation';
 import { useUiStore } from './store/uiStore';
+import { AutoConnect } from './features/connection/AutoConnect';
 import { RootNavigator } from './navigation/RootNavigator';
 
 export default function App() {
@@ -15,6 +16,7 @@ export default function App() {
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <StatusBar barStyle="light-content" />
+        <AutoConnect />
         <RootNavigator />
       </QueryClientProvider>
     </SafeAreaProvider>

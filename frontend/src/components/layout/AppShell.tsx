@@ -1,6 +1,7 @@
 import { BarChart3, Flame, LogOut, Map, Moon, Pause, Play, Settings, Smartphone, Sun, Trash2, TriangleAlert } from 'lucide-react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
+import { Tooltip } from '@/components/ui/tooltip'
 import { AlertDrawer } from '@/features/dashboard/components/AlertDrawer'
 import { useStats } from '@/features/dashboard/hooks/useAlerts'
 import { useAuthStore } from '@/store/authStore'
@@ -40,20 +41,21 @@ export function AppShell() {
           </div>
         </div>
         {items.map(({ to, label, icon: Icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            title={label}
-            className={({ isActive }) =>
-              cn('relative flex shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-white/5 lg:max-xl:justify-center', isActive && 'bg-rail-active font-semibold text-white')
-            }
-          >
-            <Icon className="size-5 shrink-0" />
-            <span className="lg:max-xl:sr-only">{label}</span>
-            {to === '/alerts' && newCount > 0 && (
-              <span className="ml-auto rounded-full bg-accent px-2 py-px text-[11px] font-bold text-[#04202c] lg:max-xl:absolute lg:max-xl:right-0.5 lg:max-xl:top-0.5 lg:max-xl:px-1.5 lg:max-xl:text-[10px]">{newCount}</span>
-            )}
-          </NavLink>
+          // labels are visible except in the icon rail (1024-1279px), so only show the hint there
+          <Tooltip key={to} side="right" label={to === '/alerts' && newCount > 0 ? `${label} · ${newCount} new` : label} className="max-lg:hidden xl:hidden">
+            <NavLink
+              to={to}
+              className={({ isActive }) =>
+                cn('relative flex shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-white/5 lg:max-xl:justify-center', isActive && 'bg-rail-active font-semibold text-white')
+              }
+            >
+              <Icon className="size-5 shrink-0" />
+              <span className="lg:max-xl:sr-only">{label}</span>
+              {to === '/alerts' && newCount > 0 && (
+                <span className="ml-auto rounded-full bg-accent px-2 py-px text-[11px] font-bold text-[#04202c] lg:max-xl:absolute lg:max-xl:right-0.5 lg:max-xl:top-0.5 lg:max-xl:px-1.5 lg:max-xl:text-[10px]">{newCount}</span>
+              )}
+            </NavLink>
+          </Tooltip>
         ))}
         <p className="mt-auto hidden px-3 py-2 text-[11px] leading-relaxed opacity-60 xl:block">
           Hare &amp; Turtle AI Solutions

@@ -3,6 +3,8 @@ import { Linking, StyleSheet, Text, View } from 'react-native';
 import { Camera, useCameraDevice, useCameraFormat } from 'react-native-vision-camera';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../../components/Button';
+import { VIDEO_BITRATE_MBPS, VIDEO_FPS, VIDEO_HEIGHT, VIDEO_WIDTH } from '../../../constants';
+import { ConnectionBadge } from '../../connection/ConnectionBadge';
 import { SegmentedControl } from '../../../components/SegmentedControl';
 import { UploadProgress } from '../../../components/UploadProgress';
 import { Camera as CameraIcon, MapPin, Navigation, UploadCloud } from 'lucide-react-native';
@@ -11,6 +13,7 @@ import { useOrientation } from '../../../hooks/useOrientation';
 import { useSessionsStore } from '../../../store/sessionsStore';
 import { colors, radius, type } from '../../../theme';
 import { formatElapsed } from '../../../utils/time';
+import { LiveCoords } from '../components/LiveCoords';
 import { RecBadge } from '../components/RecBadge';
 import { RecordButton } from '../components/RecordButton';
 import { StatTile } from '../components/StatusRow';
@@ -24,10 +27,12 @@ export const RecordScreen = () => {
   const { orientation, set: setOrientation } = useOrientation();
   const device = useCameraDevice('back');
   const format = useCameraFormat(device, [
-    { videoResolution: { width: 1920, height: 1080 } },
-    { fps: 30 },
+    { videoResolution: { width: VIDEO_WIDTH, height: VIDEO_HEIGHT } },
+    { fps: VIDEO_FPS },
   ]);
-  const { sessionId, startedAt, gpsAccuracy, start, stop } = useCaptureSession(camera);
+  // the camera throws if the fps is outside what the chosen format supports
+  const fps = format ? Math.min(Math.max(VIDEO_FPS, format.minFps), format.maxFps) : VIDEO_FPS;
+  const { sessionId, startedAt, fix, gpsAccuracy, start, stop } = useCaptureSession(camera);
   const session = useSessionsStore(s => (sessionId ? s.sessions[sessionId] : undefined));
   const [now, setNow] = useState(Date.now());
 
@@ -72,13 +77,16 @@ export const RecordScreen = () => {
     <View style={styles.root}>
       {device ? (
         <Camera ref={camera} style={StyleSheet.absoluteFill} device={device} format={format}
-          fps={30} video audio={false} isActive />
+          fps={fps} video audio={false} videoBitRate={VIDEO_BITRATE_MBPS} isActive />
       ) : (
         <Text style={styles.noCam}>No camera available</Text>
       )}
 
       <View style={[styles.top, { top: insets.top + 12 }]}>
-        {recording ? <RecBadge time={formatElapsed(now - startedAt)} /> : <View />}
+        <View style={styles.left}>
+          {recording && <RecBadge time={formatElapsed(now - startedAt)} />}
+          <ConnectionBadge compact={recording} />
+        </View>
         <View style={{ width: 250 }}>
           <SegmentedControl glass disabled={recording} value={orientation}
             onChange={setOrientation}
@@ -87,6 +95,7 @@ export const RecordScreen = () => {
       </View>
 
       <View style={[styles.panel, { bottom: 12 }]}>
+        {recording && <LiveCoords fix={fix} now={now} />}
         <View style={styles.stats}>
           <StatTile icon={MapPin} label="GPS" value={quality.label} tone={quality.tone} />
           <StatTile icon={Navigation} label="Points" value={String(session?.gpsTotalLogged ?? 0)} />
@@ -118,6 +127,7 @@ const styles = StyleSheet.create({
     position: 'absolute', left: 12, right: 12, padding: 16, gap: 14,
     backgroundColor: colors.glass, borderRadius: radius.lg,
   },
+  left: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   stats: { flexDirection: 'row', gap: 12 },
   action: { alignItems: 'center', gap: 8 },
   hint: { ...type.caption, color: colors.muted },

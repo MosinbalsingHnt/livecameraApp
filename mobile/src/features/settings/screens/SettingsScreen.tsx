@@ -33,7 +33,7 @@ export const SettingsScreen = () => {
       <Card>
         <Input label="Base URL" value={baseUrl} onChangeText={setBaseUrl}
           placeholder="http://192.168.1.10:8100" keyboardType="url" />
-        <Input label="Vehicle ID" value={vehicleId} onChangeText={setVehicleId} placeholder="PCMC-14" />
+        <Input label="Vehicle ID" value={vehicleId} onChangeText={setVehicleId} placeholder="PCMC-DEMO-01" />
         <View style={styles.row}>
           <Button flex variant="secondary" title="Save" onPress={save} />
           <Button flex variant="info" title={health.isFetching ? 'Testing…' : 'Test connection'}

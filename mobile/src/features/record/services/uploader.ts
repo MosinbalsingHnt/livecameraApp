@@ -74,13 +74,14 @@ export async function pumpSession(sessionId: string) {
     for (const c of get(sessionId).chunks) {
       if (c.uploaded) continue;
       if (!c.finished) break;
-      let lastPercent = -10;
+      let lastPercent = 0;
+      patch(sessionId, { uploading: { index: c.index, percent: 0 } }); // show it the moment it starts
       const r: any = await runMutation(uploadChunkMutation, {
         sessionId,
         index: c.index,
         path: c.path,
         onProgress: percent => {
-          if (percent - lastPercent >= 10 || percent === 100) {
+          if (percent - lastPercent >= 3 || percent === 100) {
             lastPercent = percent;
             patch(sessionId, { uploading: { index: c.index, percent } });
           }

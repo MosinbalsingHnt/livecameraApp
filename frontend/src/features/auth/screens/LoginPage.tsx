@@ -1,6 +1,7 @@
 import { Eye, EyeOff, Loader2, Lock, Mail, MapPinned, Radar, ShieldCheck, Trash2 } from 'lucide-react'
 import { useRef, useState, type FormEvent, type MouseEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
+import { Tooltip } from '@/components/ui/tooltip'
 import { getErrorMessage } from '@/services/api/axios'
 import { homeFor, useAuthStore } from '@/store/authStore'
 import { useLogin } from '../hooks/useAuth'
@@ -99,9 +100,11 @@ export default function LoginPage() {
                 <div className="relative">
                   <Lock className="pointer-events-none absolute left-3.5 top-3.5 size-4 text-white/45" />
                   <input id="password" type={show ? 'text' : 'password'} required autoComplete="current-password" className={`${inputCls} pr-11`} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
-                  <button type="button" onClick={() => setShow((s) => !s)} aria-label={show ? 'Hide password' : 'Show password'} className="absolute right-2 top-2 grid size-7 place-items-center rounded-lg text-white/55 hover:bg-white/10 hover:text-white">
-                    {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                  </button>
+                  <Tooltip side="top" label={show ? 'Hide password' : 'Show password'}>
+                    <button type="button" onClick={() => setShow((s) => !s)} aria-label={show ? 'Hide password' : 'Show password'} className="absolute right-2 top-2 grid size-7 place-items-center rounded-lg text-white/55 hover:bg-white/10 hover:text-white">
+                      {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    </button>
+                  </Tooltip>
                 </div>
               </div>
 

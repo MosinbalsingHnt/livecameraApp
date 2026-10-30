@@ -2,10 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import type { Camera } from 'react-native-vision-camera';
-import { CHUNK_MS, LOW_STORAGE_BYTES } from '../../../constants';
+import { CHUNK_MS, LOW_STORAGE_BYTES, MAX_CHUNK_BYTES, VIDEO_CODEC } from '../../../constants';
 import { checkCapturePermissions } from '../../../services/permissions';
 import { useSessionsStore } from '../../../store/sessionsStore';
 import { useSettingsStore } from '../../../store/settingsStore';
+import type { GpsPoint } from '../../../types';
 import { makeSessionId } from '../../../utils/time';
 import { startGps, stopGps } from '../services/gpsLogger';
 import {
@@ -19,7 +20,7 @@ const CHUNK_DIR = `${ReactNativeBlobUtil.fs.dirs.DocumentDir}/chunks`;
 export function useCaptureSession(camera: React.RefObject<Camera | null>) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [startedAt, setStartedAt] = useState(0);
-  const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
+  const [fix, setFix] = useState<GpsPoint | null>(null);
   const t0 = useRef(0);
   const chunkIndex = useRef(0);
   const running = useRef(false);
@@ -34,7 +35,7 @@ export function useCaptureSession(camera: React.RefObject<Camera | null>) {
       store.getState().upsertChunk(sid, { index, path: '', finished: false, uploaded: false });
       camera.current?.startRecording({
         fileType: 'mp4',
-        videoCodec: 'h264',
+        videoCodec: VIDEO_CODEC,
         onRecordingFinished: async video => {
           const dest = `${CHUNK_DIR}/${sid}_${index}.mp4`;
           try {
@@ -43,6 +44,15 @@ export function useCaptureSession(camera: React.RefObject<Camera | null>) {
           } catch {
             /* keep file where it is */
           }
+          ReactNativeBlobUtil.fs
+            .stat(dest)
+            .then(st => {
+              const size = Number(st.size);
+              const msg = `chunk ${index}: ${(size / 1048576).toFixed(2)} MB, ${video.duration.toFixed(1)} s`;
+              if (size > MAX_CHUNK_BYTES) console.warn('[record] over 3 MB —', msg);
+              else console.log('[record]', msg);
+            })
+            .catch(() => {});
           store.getState().patchChunk(sid, index, { path: dest, finished: true });
           finishedResolve.current?.();
           pumpSession(sid); // upload while the next chunk records
@@ -116,7 +126,7 @@ export function useCaptureSession(camera: React.RefObject<Camera | null>) {
       alerts: [],
     });
     recordChunk(sid);
-    startGps(sid, setGpsAccuracy);
+    startGps(sid, setFix);
     setSessionId(sid);
     setStartedAt(t0.current);
     pumpSession(sid); // POST /sessions asap
@@ -132,7 +142,7 @@ export function useCaptureSession(camera: React.RefObject<Camera | null>) {
     setRecordingFlag(false);
     store.getState().patch(sid, { stopped: true, state: 'uploading' });
     setSessionId(null);
-    setGpsAccuracy(null);
+    setFix(null);
     pumpSession(sid); // final chunk + GPS flush + complete
   }, [sessionId, stopCurrent, store]);
 
@@ -143,5 +153,5 @@ export function useCaptureSession(camera: React.RefObject<Camera | null>) {
     [],
   );
 
-  return { sessionId, startedAt, gpsAccuracy, start, stop };
+  return { sessionId, startedAt, fix, gpsAccuracy: fix?.accuracy_m ?? null, start, stop };
 }

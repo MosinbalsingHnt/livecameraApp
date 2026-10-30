@@ -19,15 +19,16 @@ export const toGpsPoint = (p: Geolocation.GeoPosition): GpsPoint => {
   return pt;
 };
 
-export function startGps(sessionId: string, onFix?: (accuracy: number) => void) {
+export function startGps(sessionId: string, onFix?: (point: GpsPoint) => void) {
   stopGps();
   watchId = Geolocation.watchPosition(
     pos => {
       // target 1 point/second
       if (pos.timestamp - lastFixAt < GPS_INTERVAL_MS * 0.9) return;
       lastFixAt = pos.timestamp;
-      useSessionsStore.getState().appendGps(sessionId, toGpsPoint(pos));
-      onFix?.(pos.coords.accuracy);
+      const point = toGpsPoint(pos);
+      useSessionsStore.getState().appendGps(sessionId, point);
+      onFix?.(point);
     },
     err => console.warn('GPS error', err.code, err.message),
     {

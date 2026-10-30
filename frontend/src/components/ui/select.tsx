@@ -34,7 +34,7 @@ export function Select({ value, onChange, options, placeholder, className, disab
         <RS.Icon><ChevronDown className="size-4 text-muted-foreground" /></RS.Icon>
       </RS.Trigger>
       <RS.Portal>
-        <RS.Content position="popper" sideOffset={4} className="z-[100] max-h-72 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-lg border bg-card shadow-lg">
+        <RS.Content position="popper" sideOffset={4} className="z-[1200] max-h-72 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-lg border bg-card shadow-lg">
           <RS.Viewport className="p-1">
             {options.map((o) => (
               <RS.Item

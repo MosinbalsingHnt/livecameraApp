@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, EmptyState, SectionLabel } from '@/components/ui/card'
 import { OSM_ATTR, OSM_URL } from '@/components/ui/mini-map'
 import { useHotspots } from '@/features/hotspots/hooks/useHotspots'
-import { cn, fmtDateTime } from '@/lib/utils'
+import { cn, fmtDateTime, hasCoords } from '@/lib/utils'
 import { useUiStore } from '@/store/uiStore'
 import { OPEN_STATUSES, type Alert } from '@/types/api'
 import { useAlerts } from '../hooks/useAlerts'
@@ -49,7 +49,10 @@ export default function MapPage() {
 
   const all = alerts.data?.alerts ?? []
   const shown = useMemo(() => (onlyOpen ? all.filter((a) => OPEN_STATUSES.includes(a.status)) : all), [all, onlyOpen])
-  const points = useMemo(() => shown.map((a) => [a.latitude, a.longitude] as [number, number]), [shown])
+  // alerts with no GPS match are listed but cannot be drawn
+  const plotted = useMemo(() => shown.filter(hasCoords), [shown])
+  const points = useMemo(() => plotted.map((a) => [a.latitude, a.longitude] as [number, number]), [plotted])
+  const unplaced = shown.length - plotted.length
   const sel = all.find((a) => a.alert_id === selected)
   const open = all.filter((a) => OPEN_STATUSES.includes(a.status))
 
@@ -59,12 +62,12 @@ export default function MapPage() {
         <MapContainer center={target ?? PUNE} zoom={14} className="size-full" scrollWheelZoom>
           <TileLayer url={OSM_URL} attribution={OSM_ATTR} />
           <Camera target={target} points={points} />
-          {showHot && hotspots.data?.map((h, i) => (
+          {showHot && hotspots.data?.filter(hasCoords).map((h, i) => (
             <CircleMarker key={i} center={[h.latitude, h.longitude]} radius={14 + h.alerts * 2.5} pathOptions={{ color: '#E2552B', weight: 1, fillColor: '#E2552B', fillOpacity: 0.28 }}>
               <Tooltip>{h.ward} · {h.alerts} sightings ({h.open} open)</Tooltip>
             </CircleMarker>
           ))}
-          {showAlerts && shown.map((a) => (
+          {showAlerts && plotted.map((a) => (
             <CircleMarker
               key={a.alert_id}
               center={[a.latitude, a.longitude]}
@@ -113,7 +116,7 @@ export default function MapPage() {
                 <li key={a.alert_id}>
                   <button
                     className={cn('flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-muted', a.alert_id === selected && 'bg-brand-soft')}
-                    onClick={() => { setSelected(a.alert_id); setTarget([a.latitude, a.longitude]) }}
+                    onClick={() => { setSelected(a.alert_id); if (hasCoords(a)) setTarget([a.latitude, a.longitude]) }}
                   >
                     <span className="size-2.5 shrink-0 rounded-full" style={{ background: colorOf(a) }} />
                     <span className="min-w-0 flex-1">
@@ -127,6 +130,11 @@ export default function MapPage() {
             </ul>
           )}
         </Card>
+        {unplaced > 0 && (
+          <p className="rounded-lg bg-warn-soft px-3 py-2 text-xs font-medium text-warn">
+            {unplaced} alert{unplaced === 1 ? '' : 's'} without a GPS location {unplaced === 1 ? 'is' : 'are'} not drawn on the map. Open {unplaced === 1 ? 'it' : 'them'} from the list.
+          </p>
+        )}
         <p className="px-1 text-xs text-muted-foreground">Vehicle positions are not exposed by the backend yet, so only alerts and hotspots are drawn.</p>
       </aside>
     </div>

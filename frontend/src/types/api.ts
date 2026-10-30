@@ -49,8 +49,8 @@ export interface Alert {
   class: string
   track_id: number | null
   vehicle_id: string | null
-  latitude: number
-  longitude: number
+  latitude: number | null
+  longitude: number | null
   ward: string | null
   ward_code: string | null
   road_segment: string | null
@@ -123,8 +123,8 @@ export interface DashboardStats {
 export interface Hotspot {
   ward_code: string
   ward: string
-  latitude: number
-  longitude: number
+  latitude: number | null
+  longitude: number | null
   road_segment: string | null
   spots: number
   alerts: number

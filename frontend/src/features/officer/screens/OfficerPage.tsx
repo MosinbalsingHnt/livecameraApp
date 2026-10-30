@@ -6,7 +6,7 @@ import { Card, EmptyState, Skeleton } from '@/components/ui/card'
 import { Dialog } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { SlaCell } from '@/features/dashboard/components/SlaCell'
-import { fmtDateTime } from '@/lib/utils'
+import { fmtCoords, fmtDateTime, hasCoords } from '@/lib/utils'
 import type { Alert } from '@/types/api'
 import { useOfficerAction, useOfficerTasks } from '../hooks/useOfficerTasks'
 
@@ -46,13 +46,17 @@ export default function OfficerPage() {
             <div>
               <p className="text-base font-semibold">{t.ward ?? t.ward_code}</p>
               <p className="text-sm text-muted-foreground">{t.road_segment ?? 'Road not mapped'} · raised {fmtDateTime(t.created_at)}</p>
-              <p className="font-mono text-xs text-muted-foreground">{t.latitude.toFixed(5)}, {t.longitude.toFixed(5)}</p>
+              <p className="font-mono text-xs text-muted-foreground">{fmtCoords(t.latitude, t.longitude)}</p>
             </div>
             {t.cant_reason && <p className="flex gap-2 rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger"><TriangleAlert className="size-4 shrink-0" />Last time: {t.cant_reason}</p>}
 
-            <Button asChild variant="secondary" size="lg" className="w-full">
-              <a href={`https://www.google.com/maps/dir/?api=1&destination=${t.latitude},${t.longitude}`} target="_blank" rel="noreferrer"><Navigation className="size-5" /> Navigate</a>
-            </Button>
+            {hasCoords(t) ? (
+              <Button asChild variant="secondary" size="lg" className="w-full">
+                <a href={`https://www.google.com/maps/dir/?api=1&destination=${t.latitude},${t.longitude}`} target="_blank" rel="noreferrer"><Navigation className="size-5" /> Navigate</a>
+              </Button>
+            ) : (
+              <Button variant="secondary" size="lg" className="w-full" disabled><Navigation className="size-5" /> No GPS location</Button>
+            )}
             {t.status === 'Assigned' && (
               <Button size="lg" className="w-full" loading={act.isPending && act.variables?.id === t.alert_id && act.variables.kind === 'start'} onClick={() => act.mutate({ id: t.alert_id, kind: 'start' })}>
                 <Play className="size-5" /> Start work

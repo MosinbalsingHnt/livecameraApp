@@ -1,5 +1,6 @@
 import { BarChart3, Flame, LogOut, Map, Moon, Pause, Play, Settings, Smartphone, Sun, Trash2, TriangleAlert } from 'lucide-react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Button } from '@/components/ui/button'
 import { Tooltip } from '@/components/ui/tooltip'
 import { AlertDrawer } from '@/features/dashboard/components/AlertDrawer'
@@ -93,7 +94,8 @@ export function AppShell() {
           </div>
         </header>
         <main className="mx-auto w-full max-w-[1600px] flex-1 p-4 lg:p-5 xl:p-6 2xl:max-w-[1880px] 2xl:p-8">
-          <Outlet />
+          {/* keyed by route so navigating away clears a failed screen */}
+          <ErrorBoundary key={pathname}><Outlet /></ErrorBoundary>
         </main>
       </div>
       <AlertDrawer />

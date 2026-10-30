@@ -1,4 +1,5 @@
-import { Bell, Camera, CheckCircle2, RotateCcw, Send, UserPlus, XCircle } from 'lucide-react'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { Bell, Camera, CheckCircle2, MapPin, RotateCcw, Send, UserPlus, XCircle } from 'lucide-react'
 import { useState } from 'react'
 import { StatusBadge, TypeBadge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -8,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { MiniMap } from '@/components/ui/mini-map'
 import { Select } from '@/components/ui/select'
 import { useOfficers } from '@/features/admin/hooks/useAdmin'
-import { fmtDateTime, fmtTime, pct } from '@/lib/utils'
+import { fmtCoords, fmtDateTime, fmtTime, hasCoords, pct } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import { useUiStore } from '@/store/uiStore'
 import { LIFECYCLE_STATUSES, OPEN_STATUSES, type Alert } from '@/types/api'
@@ -22,7 +23,7 @@ export function AlertDrawer() {
   const close = useUiStore((s) => s.closeAlert)
   return (
     <Dialog open={!!id} onOpenChange={(o) => !o && close()} title={id ? `Alert ${id}` : 'Alert'} variant="sheet">
-      {id && <DrawerBody id={id} />}
+      {id && <ErrorBoundary key={id} what="alert details" compact><DrawerBody id={id} /></ErrorBoundary>}
     </Dialog>
   )
 }
@@ -51,7 +52,17 @@ function DrawerBody({ id }: { id: string }) {
                 <p className="font-mono text-xs">{alert.snapshot_path ?? 'no evidence file'}</p>
               </div>
             </div>
-            <MiniMap lat={alert.latitude} lon={alert.longitude} color={alert.type === 'Heap' ? '#A63A14' : '#15508F'} />
+            {hasCoords(alert) ? (
+              <MiniMap lat={alert.latitude} lon={alert.longitude} color={alert.type === 'Heap' ? '#A63A14' : '#15508F'} />
+            ) : (
+              <div className="grid h-48 place-items-center rounded-xl border border-dashed bg-muted text-center text-muted-foreground">
+                <div>
+                  <MapPin className="mx-auto mb-1 size-7" />
+                  <p className="text-sm font-semibold">No GPS location</p>
+                  <p className="text-xs">No GPS fix matched this detection.</p>
+                </div>
+              </div>
+            )}
           </Card>
           <div className="grid gap-3 sm:grid-cols-3">
             <Card>
@@ -65,7 +76,7 @@ function DrawerBody({ id }: { id: string }) {
               <p className="font-semibold">{alert.ward ?? '—'}</p>
               <p className="text-muted-foreground">{alert.ward_code ?? ''}</p>
               <p className="text-muted-foreground">Road: {alert.road_segment ?? '—'}</p>
-              <p className="font-mono text-xs text-muted-foreground">{alert.latitude.toFixed(5)}, {alert.longitude.toFixed(5)}</p>
+              <p className="font-mono text-xs text-muted-foreground">{fmtCoords(alert.latitude, alert.longitude)}</p>
             </Card>
             <Card>
               <SectionLabel>Source</SectionLabel>

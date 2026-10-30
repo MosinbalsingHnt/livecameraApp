@@ -51,3 +51,11 @@ export function timeAgo(iso?: string | null) {
 }
 
 export const pct = (v: number | null | undefined) => (v == null ? '—' : `${Math.round(v * 100)}%`)
+
+/** Alerts can arrive without a GPS match, so coordinates are nullable. */
+export const hasCoords = <T extends { latitude: number | null; longitude: number | null }>(
+  x: T,
+): x is T & { latitude: number; longitude: number } => x.latitude != null && x.longitude != null
+
+export const fmtCoords = (lat: number | null, lon: number | null, digits = 5) =>
+  lat == null || lon == null ? 'No GPS fix' : `${lat.toFixed(digits)}, ${lon.toFixed(digits)}`

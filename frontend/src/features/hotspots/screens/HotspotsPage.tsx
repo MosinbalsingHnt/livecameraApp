@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, EmptyState, Label, Skeleton } from '@/components/ui/card'
 import { Select } from '@/components/ui/select'
-import { timeAgo } from '@/lib/utils'
+import { fmtCoords, hasCoords, timeAgo } from '@/lib/utils'
 import { useState } from 'react'
 import { useHotspots } from '../hooks/useHotspots'
 
@@ -45,7 +45,7 @@ export default function HotspotsPage() {
               <div className="min-w-48 flex-1">
                 <p className="font-semibold">{h.ward} <span className="font-normal text-muted-foreground">· {h.ward_code}</span></p>
                 <p className="text-xs text-muted-foreground">
-                  {h.road_segment ?? 'Road not mapped'} · last seen {timeAgo(h.last_seen_at)} · {h.latitude.toFixed(4)}, {h.longitude.toFixed(4)}
+                  {h.road_segment ?? 'Road not mapped'} · last seen {timeAgo(h.last_seen_at)} · {fmtCoords(h.latitude, h.longitude, 4)}
                 </p>
                 <div className="mt-2 h-2 rounded-full bg-muted"><div className="h-full rounded-full bg-danger" style={{ width: `${(h.alerts / max) * 100}%` }} /></div>
               </div>
@@ -54,9 +54,11 @@ export default function HotspotsPage() {
                 <Badge>{h.spots} spot{h.spots === 1 ? '' : 's'}</Badge>
                 <Badge className={h.open ? 'bg-warn-soft text-warn' : ''}>{h.open} open</Badge>
               </div>
-              <Button asChild variant="secondary" size="sm">
-                <Link to={`/map?lat=${h.latitude}&lon=${h.longitude}`}><MapPin className="size-3.5" /> View on map</Link>
-              </Button>
+              {hasCoords(h) && (
+                <Button asChild variant="secondary" size="sm">
+                  <Link to={`/map?lat=${h.latitude}&lon=${h.longitude}`}><MapPin className="size-3.5" /> View on map</Link>
+                </Button>
+              )}
             </Card>
           ))}
         </div>

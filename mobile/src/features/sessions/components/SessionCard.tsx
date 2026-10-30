@@ -3,6 +3,7 @@ import { Alert, StyleSheet, Text, View } from 'react-native';
 import { Badge } from '../../../components/Badge';
 import { Button } from '../../../components/Button';
 import { Card } from '../../../components/Card';
+import { UploadProgress } from '../../../components/UploadProgress';
 import { colors, type } from '../../../theme';
 import type { LocalSession, SessionState } from '../../../types';
 import { APP_STARTED_AT } from '../../../utils/time';
@@ -55,8 +56,8 @@ export const SessionCard = ({ session }: { session: LocalSession }) => {
         <Badge label={t.label} color={t.fg} bg={t.bg} />
       </View>
 
-      <View style={styles.track}>
-        <View style={[styles.fill, { width: total ? `${(up / total) * 100}%` : '0%', backgroundColor: t.fg }]} />
+      <View style={styles.progress}>
+        <UploadProgress session={session} />
       </View>
 
       <View style={styles.stats}>
@@ -68,11 +69,6 @@ export const SessionCard = ({ session }: { session: LocalSession }) => {
       {session.alerts.length > 0 && (
         <Text style={styles.alerts}>Alerts: {session.alerts.join(', ')}</Text>
       )}
-      {session.uploading ? (
-        <Text style={styles.alerts}>
-          Uploading chunk {session.uploading.index}… {session.uploading.percent}%
-        </Text>
-      ) : null}
       {session.lastUpload ? <Text style={styles.alerts}>{session.lastUpload}</Text> : null}
       {session.lastError ? <Text style={styles.err} numberOfLines={2}>{session.lastError}</Text> : null}
       {(needsRetry || !recordingNow) && (
@@ -93,8 +89,7 @@ const styles = StyleSheet.create({
   card: { marginBottom: 12 },
   head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   id: { color: colors.text, fontWeight: '800', fontSize: 15, flex: 1 },
-  track: { height: 6, borderRadius: 3, backgroundColor: colors.surfaceAlt, marginTop: 14, overflow: 'hidden' },
-  fill: { height: 6, borderRadius: 3 },
+  progress: { marginTop: 14 },
   stats: { flexDirection: 'row', marginTop: 14 },
   statLabel: { ...type.caption, color: colors.muted },
   statValue: { color: colors.text, fontSize: 18, fontWeight: '800', marginTop: 4 },

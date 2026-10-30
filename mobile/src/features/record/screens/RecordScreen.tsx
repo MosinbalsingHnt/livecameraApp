@@ -4,6 +4,7 @@ import { Camera, useCameraDevice, useCameraFormat } from 'react-native-vision-ca
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../../components/Button';
 import { SegmentedControl } from '../../../components/SegmentedControl';
+import { UploadProgress } from '../../../components/UploadProgress';
 import { Camera as CameraIcon, MapPin, Navigation, UploadCloud } from 'lucide-react-native';
 import { orientationOptions } from '../../../hooks/orientationOptions';
 import { useOrientation } from '../../../hooks/useOrientation';
@@ -91,6 +92,9 @@ export const RecordScreen = () => {
           <StatTile icon={Navigation} label="Points" value={String(session?.gpsTotalLogged ?? 0)} />
           <StatTile icon={UploadCloud} label="Chunks" value={`${uploaded}/${session?.chunks.length ?? 0}`} />
         </View>
+        {session && session.chunks.some(c => c.finished) ? (
+          <UploadProgress session={session} compact />
+        ) : null}
         {session?.lastError ? (
           <Text style={styles.err} numberOfLines={2}>Upload retrying: {session.lastError}</Text>
         ) : null}

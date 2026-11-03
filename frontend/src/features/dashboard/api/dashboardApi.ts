@@ -25,6 +25,13 @@ export const alertsApi = {
       .then((r) => r.data),
 }
 
+export const mediaApi = {
+  /** Evidence bytes require the Authorization header, so they are
+   * fetched as blobs through the shared client - a plain <img src>
+   * or <video src> cannot send the bearer token. */
+  blob: (path: string) => api.get<Blob>(path, { responseType: 'blob' }).then((r) => r.data),
+}
+
 export const statsApi = {
   get: () => api.get<DashboardStats>('/dashboard/stats').then((r) => r.data),
 }

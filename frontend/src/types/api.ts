@@ -59,6 +59,10 @@ export interface Alert {
   avg_confidence: number | null
   snapshot_path: string | null
   clip_path: string | null
+  /** Authenticated evidence URLs; null until the file is uploaded.
+   * Fetch them as blobs (Authorization header required). */
+  snapshot_url: string | null
+  clip_url: string | null
   created_at: string
   due_at: string | null
   sla_state: SlaState

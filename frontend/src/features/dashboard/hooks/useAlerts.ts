@@ -3,7 +3,8 @@ import { toast } from 'sonner'
 import { getErrorMessage } from '@/services/api/axios'
 import { useLiveInterval } from '@/store/uiStore'
 import type { AlertsQuery } from '@/types/api'
-import { alertsApi, statsApi } from '../api/dashboardApi'
+import { useEffect, useState } from 'react'
+import { alertsApi, mediaApi, statsApi } from '../api/dashboardApi'
 
 export const useAlerts = (q: AlertsQuery) => {
   const interval = useLiveInterval(10_000)
@@ -62,3 +63,37 @@ export const useNotify = () =>
       r.sent ? toast.success(`Email sent to ${r.recipients.length} recipient(s)`) : toast.warning(r.reason ?? 'No notification was sent'),
     onError: (e) => toast.error(getErrorMessage(e)),
   })
+
+/** Loads an authenticated evidence file (snapshot/clip) as an object
+ * URL for <img>/<video>. Revokes the URL on unmount or path change. */
+export function useMediaObjectUrl(path: string | null | undefined) {
+  const [state, setState] = useState<{ url: string | null; loading: boolean; error: boolean }>({
+    url: null,
+    loading: !!path,
+    error: false,
+  })
+  useEffect(() => {
+    if (!path) {
+      setState({ url: null, loading: false, error: false })
+      return
+    }
+    let alive = true
+    let objectUrl: string | null = null
+    setState({ url: null, loading: true, error: false })
+    mediaApi
+      .blob(path)
+      .then((blob) => {
+        if (!alive) return
+        objectUrl = URL.createObjectURL(blob)
+        setState({ url: objectUrl, loading: false, error: false })
+      })
+      .catch(() => {
+        if (alive) setState({ url: null, loading: false, error: true })
+      })
+    return () => {
+      alive = false
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }, [path])
+  return state
+}

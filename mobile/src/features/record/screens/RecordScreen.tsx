@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Linking, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, StyleSheet, Text, View } from 'react-native';
 import { Camera, useCameraDevice, useCameraFormat } from 'react-native-vision-camera';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../../components/Button';
@@ -19,6 +19,7 @@ import { RecordButton } from '../components/RecordButton';
 import { StatTile } from '../components/StatusRow';
 import { useCapturePermissions } from '../hooks/useCapturePermissions';
 import { useCaptureSession } from '../hooks/useCaptureSession';
+import { useGpsPreview } from '../hooks/useGpsPreview';
 
 export const RecordScreen = () => {
   const camera = useRef<Camera>(null);
@@ -35,6 +36,8 @@ export const RecordScreen = () => {
   const { sessionId, startedAt, fix, gpsAccuracy, start, stop } = useCaptureSession(camera);
   const session = useSessionsStore(s => (sessionId ? s.sessions[sessionId] : undefined));
   const [now, setNow] = useState(Date.now());
+  // warm the GPS before recording, so the first chunks already have a position
+  const preview = useGpsPreview(access === 'granted' && !sessionId);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -63,13 +66,26 @@ export const RecordScreen = () => {
   }
 
   const recording = !!sessionId;
+  // video recorded before the first GPS fix cannot be placed on the map, so ask first
+  const onRecordPress = () => {
+    if (preview) return start();
+    Alert.alert(
+      'No GPS fix yet',
+      'Detections in the first seconds will have no location until GPS locks on. Wait for the GPS tile to show Good or Fair, ideally with a clear view of the sky.',
+      [
+        { text: 'Wait', style: 'cancel' },
+        { text: 'Record anyway', onPress: start },
+      ],
+    );
+  };
   const uploaded = session?.chunks.filter(c => c.uploaded).length ?? 0;
+  const accuracy = gpsAccuracy ?? preview?.accuracy ?? null;
   const quality =
-    gpsAccuracy == null
+    accuracy == null
       ? { label: 'No fix', tone: colors.muted }
-      : gpsAccuracy <= 10
+      : accuracy <= 10
       ? { label: 'Good', tone: colors.primary }
-      : gpsAccuracy <= 30
+      : accuracy <= 30
       ? { label: 'Fair', tone: colors.warn }
       : { label: 'Poor', tone: colors.danger };
 
@@ -108,7 +124,7 @@ export const RecordScreen = () => {
           <Text style={styles.err} numberOfLines={2}>Upload retrying: {session.lastError}</Text>
         ) : null}
         <View style={styles.action}>
-          <RecordButton recording={recording} onPress={recording ? stop : start} />
+          <RecordButton recording={recording} onPress={recording ? stop : onRecordPress} />
           <Text style={styles.hint}>{recording ? 'Tap to stop' : 'Tap to start recording'}</Text>
         </View>
       </View>

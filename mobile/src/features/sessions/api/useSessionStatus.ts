@@ -15,6 +15,7 @@ export const useSessionStatus = (s: LocalSession) => {
     queryFn: async () => {
       const r = await getSessionStatus(s.sessionId);
       const p: Partial<LocalSession> = { eventsFound: r.events_found, alerts: r.alerts ?? [] };
+      if (r.gps_points != null) p.gpsServer = r.gps_points;
       if (r.status === 'done') p.state = 'done';
       if (r.status === 'failed') p.state = 'failed';
       patch(s.sessionId, p);

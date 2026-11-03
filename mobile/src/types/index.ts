@@ -35,6 +35,8 @@ export type LocalSession = {
   gpsTotalLogged: number;
   eventsFound: number;
   alerts: string[];
+  /** GPS points the gateway reports having received (its `gps_points`) */
+  gpsServer?: number;
   lastError?: string;
   /** timing of the most recent chunk upload, to tell network from server slowness */
   lastUpload?: string;
@@ -48,4 +50,5 @@ export type ServerSessionStatus = {
   chunks_received: number;
   events_found: number;
   alerts: string[];
+  gps_points?: number;
 };

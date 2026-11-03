@@ -47,6 +47,11 @@ export const SessionCard = ({ session, index = 0 }: { session: LocalSession; ind
   const recordingNow =
     session.state === 'live' && !session.stopped && session.videoStartedAtUtc >= APP_STARTED_AT;
 
+  // The engine only locates a detection with a GPS point within 5 s of it. About one point per
+  // second is expected while recording, so far fewer means a weak sky view or a stalled GPS.
+  const videoSeconds = (total * CHUNK_MS) / 1000;
+  const thinGps = total >= 2 && session.gpsTotalLogged < videoSeconds * 0.7;
+
   // staggered fade/slide-in when the list appears
   const enter = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -92,7 +97,12 @@ export const SessionCard = ({ session, index = 0 }: { session: LocalSession; ind
         <View style={styles.metas}>
           <Meta icon={Clock} label="Length" value={total ? formatElapsed(total * CHUNK_MS) : '—'} />
           <Meta icon={Film} label="Chunks" value={`${up}/${total}`} />
-          <Meta icon={MapPin} label="GPS left" value={session.gpsPending.length} />
+          <Meta
+            icon={MapPin}
+            label="GPS pts"
+            value={`${session.gpsServer ?? '—'}/${session.gpsTotalLogged}`}
+            tone={thinGps ? colors.warn : undefined}
+          />
           <Meta
             icon={TriangleAlert}
             label="Events"
@@ -111,6 +121,15 @@ export const SessionCard = ({ session, index = 0 }: { session: LocalSession; ind
           </View>
         )}
 
+        {thinGps ? (
+          <View style={styles.errBox}>
+            <MapPin size={14} color={colors.warn} />
+            <Text style={styles.err}>
+              Weak GPS: {session.gpsTotalLogged} points for {formatElapsed(total * CHUNK_MS)} of video.
+              Detections in the gaps will have no location. Record outdoors with a clear sky view.
+            </Text>
+          </View>
+        ) : null}
         {session.lastUpload ? <Text style={styles.diag}>{session.lastUpload}</Text> : null}
         {session.lastError ? (
           <View style={styles.errBox}>

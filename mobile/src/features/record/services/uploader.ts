@@ -16,25 +16,42 @@ const rerun = new Set<string>();
 const get = (id: string) => useSessionsStore.getState().sessions[id];
 const patch = (id: string, p: object) => useSessionsStore.getState().patch(id, p);
 
-const gpsBusy = new Set<string>();
+const gpsInflight = new Map<string, Promise<boolean>>();
 
 /**
  * Send buffered GPS points. Has its own lock so a slow chunk upload never
  * holds GPS back; safe to call from the service loop at any time.
+ *
+ * Resolves true once everything buffered so far has been accepted by the
+ * server. A caller that arrives while a send is in flight waits for it (and
+ * then sends what built up meanwhile) instead of returning early: the engine
+ * only geo-tags a detection when a GPS point lies within 5 s of it, so a chunk
+ * must never be uploaded ahead of the GPS that covers it.
  */
-export async function flushGps(sessionId: string) {
+export function flushGps(sessionId: string): Promise<boolean> {
+  const running = gpsInflight.get(sessionId);
+  if (running) return running.then(ok => (ok ? flushGps(sessionId) : false));
+
   const s = get(sessionId);
-  if (!s || !s.created || gpsBusy.has(sessionId) || s.gpsPending.length === 0) return;
-  gpsBusy.add(sessionId);
-  try {
+  if (!s) return Promise.resolve(true);
+  if (s.gpsPending.length === 0) return Promise.resolve(true);
+  if (!s.created) return Promise.resolve(false); // cannot send before the session exists
+
+  const send = (async () => {
     const points = s.gpsPending;
-    await runMutation(appendGpsMutation, { sessionId, points });
-    useSessionsStore.getState().removeSentGps(sessionId, points[points.length - 1].t_epoch_ms);
-  } catch (e: any) {
-    patch(sessionId, { lastError: e?.message ?? String(e) });
-  } finally {
-    gpsBusy.delete(sessionId);
-  }
+    try {
+      await runMutation(appendGpsMutation, { sessionId, points });
+      useSessionsStore.getState().removeSentGps(sessionId, points[points.length - 1].t_epoch_ms);
+      return true;
+    } catch (e: any) {
+      patch(sessionId, { lastError: e?.message ?? String(e) });
+      return false;
+    } finally {
+      gpsInflight.delete(sessionId);
+    }
+  })();
+  gpsInflight.set(sessionId, send);
+  return send;
 }
 
 /** Sessions that still have work to do against the server. */
@@ -68,7 +85,9 @@ export async function pumpSession(sessionId: string) {
       patch(sessionId, { created: true });
     }
 
-    await flushGps(sessionId); // GPS first: the engine needs it to geo-tag a chunk
+    // GPS first, and it must have been accepted: the engine geo-tags a chunk from it.
+    // If it could not be sent, hold the chunks back; the next pass retries both.
+    if (!(await flushGps(sessionId))) return;
 
     // chunks strictly in order, one at a time; never block recording
     for (const c of get(sessionId).chunks) {

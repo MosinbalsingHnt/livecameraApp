@@ -480,6 +480,8 @@ Audio is not recorded.
  Server then reports done or failed (polled every 5 s)
 ```
 
+- **GPS must arrive before the video it covers.** The engine gives a detection a position only if a GPS point lies within **5 seconds** of it: inside the GPS range the position is interpolated, just outside the edge it is clamped to the nearest fix, and beyond 5 s it is left empty on purpose (a wrong ward is worse than none). So each upload pass first sends the buffered GPS and **waits until the server accepted it**; if that fails, the chunks wait for the next pass. A GPS send already in flight is awaited, never skipped.
+- **GPS warm-up.** While the Record screen is open and not recording, the app keeps the GPS awake so the GPS tile already shows Good/Fair when the driver taps Record. Tapping Record with no fix asks "Wait" or "Record anyway", because the first seconds of video would have no position. Remaining empty positions mean the phone really had no fix within 5 s of the detection (tunnels, dense cover, poor sky view).
 - **Concurrency:** at most one upload pass per session at a time; a request that arrives during a pass runs again right after instead of being dropped. GPS has its own lock so a slow video upload never holds GPS back.
 - **Retries:** each API call retries up to 3 times with exponential back-off (1 s, 2 s, 4 s … up to 30 s); the "complete" call is not retried automatically because the server answers `409` while chunks or GPS are still missing. The background loop re-runs every 10 s anyway.
 - **Resilience:** sessions, chunks and pending GPS are saved to storage, so an app kill or reboot loses nothing already recorded. On the next launch the connection check succeeds and the app resumes: a session left "live" by a kill is closed out (its half-written last chunk is dropped) and uploaded automatically.
@@ -507,7 +509,7 @@ All go to the **ingest gateway / AI engine** at the base URL from Settings (not 
 | `POST /sessions/{id}/gps` | Every pass (about every 10 s) | `{ points: [{ t_epoch_ms, lat, lon, speed_kmh?, heading_deg?, accuracy_m? }] }` |
 | `POST /sessions/{id}/chunks/{index}` | Per chunk, in order | multipart form, field `file` = `chunk_<n>.mp4` (`video/mp4`); 10-minute timeout; upload progress shown; → includes `video_bytes` |
 | `POST /sessions/{id}/complete` | After Stop, when all chunks and GPS are delivered | `409` if something is still missing |
-| `GET /sessions/{id}` | Every 5 s for live or processing sessions | → `{ session_id, status, chunks_received, events_found, alerts }` |
+| `GET /sessions/{id}` | Every 5 s for live or processing sessions | → `{ session_id, status, chunks_received, events_found, alerts, gps_points }`; `gps_points` (GPS points the gateway actually received) is shown on the session card as server/phone, and a "Weak GPS" warning appears when the phone logged under 70% of one point per second of video |
 
 Because the video clock matters, the first chunk's start time (`video_started_at_utc`) and the GPS points' own timestamps (`t_epoch_ms`) share one clock, and the server places each chunk by that clock.
 

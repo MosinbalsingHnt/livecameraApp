@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Loader2, Lock, Mail, MapPinned, Radar, ShieldCheck, Trash2 } from 'lucide-react'
+import { Eye, EyeOff, Loader2, Lock, Mail, MapPinned, Radar, ShieldCheck } from 'lucide-react'
 import { useRef, useState, type FormEvent, type MouseEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { Tooltip } from '@/components/ui/tooltip'
@@ -54,10 +54,13 @@ export default function LoginPage() {
       <div className="relative mx-auto grid w-full max-w-7xl items-center gap-10 px-5 py-6 lg:grid-cols-[1.15fr_1fr] lg:px-10 xl:py-10 2xl:max-w-[90rem]">
         <section className="hidden lg:block">
           <div className="mb-10 flex items-center gap-3">
-            <span className="grid size-12 place-items-center rounded-2xl bg-brand text-brand-foreground shadow-lg shadow-brand/30"><Trash2 className="size-6" /></span>
+            <span className="grid h-14 place-items-center rounded-2xl bg-white px-4 shadow-lg shadow-black/30">
+              <img src="/hnt-logo.svg" alt="Hare & Turtle AI Solutions" className="h-9" />
+            </span>
+            <span className="h-9 w-px bg-white/20" aria-hidden />
             <div className="leading-tight">
-              <p className="text-lg font-bold">Garbage Control Room</p>
-              <p className="text-xs text-white/60">PCMC · AI road detection</p>
+              <p className="text-lg font-bold">PCMC Sarthi</p>
+              <p className="text-xs text-white/60">AI road garbage detection</p>
             </div>
           </div>
           <h1 className="max-w-xl text-4xl font-bold leading-[1.1] tracking-tight xl:text-5xl">
@@ -78,14 +81,16 @@ export default function LoginPage() {
         </section>
 
         <section className="mx-auto w-full max-w-md">
-          <div className="mb-6 flex items-center gap-3 lg:hidden">
-            <span className="grid size-11 place-items-center rounded-xl bg-brand text-brand-foreground"><Trash2 className="size-6" /></span>
-            <p className="text-lg font-bold">Garbage Control Room</p>
+          <div className="mb-6 flex flex-col items-start gap-3 lg:hidden">
+            <span className="grid h-12 place-items-center rounded-xl bg-white px-3.5 shadow-lg shadow-black/30">
+              <img src="/hnt-logo.svg" alt="Hare & Turtle AI Solutions" className="h-8" />
+            </span>
+            <p className="text-lg font-bold">PCMC Sarthi</p>
           </div>
 
           <div className="rounded-3xl border border-white/15 bg-[#0b1a12]/60 p-7 shadow-2xl shadow-black/40 backdrop-blur-xl sm:p-9">
             <h2 className="text-2xl font-bold">Welcome back</h2>
-            <p className="mt-1 text-sm text-white/60">Sign in to the control room</p>
+            <p className="mt-1 text-sm text-white/60">Sign in to PCMC Sarthi</p>
 
             <form onSubmit={submit} className="mt-7 space-y-4">
               <div>

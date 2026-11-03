@@ -1,4 +1,4 @@
-# Road Garbage Control Room (web)
+# PCMC Sarthi (web)
 
 Dashboard for the PCMC garbage-alert backend. API contract: [FRONTEND_API_GUIDE.md](./FRONTEND_API_GUIDE.md). Original design reference: `HnT_AI_Road_Garbage_Detection_Prototype.html`.
 

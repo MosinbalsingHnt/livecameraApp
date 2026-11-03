@@ -1,4 +1,4 @@
-import { BarChart3, Flame, LogOut, Map, Moon, Pause, Play, Settings, Smartphone, Sun, Trash2, TriangleAlert } from 'lucide-react'
+import { BarChart3, Flame, LogOut, Map, Moon, Pause, Play, Settings, Smartphone, Sun, TriangleAlert } from 'lucide-react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Button } from '@/components/ui/button'
@@ -34,11 +34,15 @@ export function AppShell() {
     <div className="flex min-h-dvh flex-col lg:flex-row">
       {/* <1024 top bar · 1024-1279 icon rail · >=1280 full sidebar (wider on big panels) */}
       <aside className="flex shrink-0 items-center gap-1 overflow-x-auto bg-rail p-2 text-rail-foreground lg:sticky lg:top-0 lg:h-dvh lg:w-[4.5rem] lg:flex-col lg:items-stretch lg:overflow-y-auto lg:overflow-x-hidden lg:p-3 xl:w-56 2xl:w-64">
-        <div className="mr-2 flex items-center gap-2.5 px-2 py-1 lg:mb-4 lg:mr-0 lg:justify-center lg:px-0 lg:py-2 xl:justify-start xl:px-2">
-          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-brand text-brand-foreground"><Trash2 className="size-5" /></span>
+        <div className="mr-2 flex items-center gap-2.5 px-1 py-1 lg:mb-4 lg:mr-0 lg:flex-col lg:items-center lg:px-0 lg:py-2 xl:items-start">
+          {/* white tile keeps the green logo legible on the dark rail in both themes */}
+          <span className="grid h-10 shrink-0 place-items-center rounded-xl bg-white px-1.5 shadow-sm xl:px-2.5">
+            <img src="/hnt-mark.svg" alt="Hare & Turtle AI Solutions" className="h-6 xl:hidden" />
+            <img src="/hnt-logo.svg" alt="Hare & Turtle AI Solutions" className="hidden h-7 xl:block" />
+          </span>
           <div className="hidden leading-tight xl:block">
-            <p className="text-sm font-bold text-white">Garbage Control Room</p>
-            <p className="text-[11px] opacity-70">PCMC · AI road detection</p>
+            <p className="text-sm font-bold text-white">PCMC Sarthi</p>
+            <p className="text-[11px] opacity-70">AI road garbage detection</p>
           </div>
         </div>
         {items.map(({ to, label, icon: Icon }) => (

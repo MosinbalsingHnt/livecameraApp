@@ -13,7 +13,7 @@ import { fmtCoords, fmtDateTime, fmtTime, hasCoords, pct } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import { useUiStore } from '@/store/uiStore'
 import { LIFECYCLE_STATUSES, OPEN_STATUSES, type Alert } from '@/types/api'
-import { useAlert, useAssign, useCloseAlert, useDismiss, useNotify, useOverride, useRecipients, useReopen, useTimeline } from '../hooks/useAlerts'
+import { useAlert, useAssign, useCloseAlert, useDismiss, useMediaObjectUrl, useNotify, useOverride, useRecipients, useReopen, useTimeline } from '../hooks/useAlerts'
 import { SlaCell } from './SlaCell'
 
 const DISMISS_PRESETS = ['Not garbage', 'Duplicate', 'Private land', 'Already cleared']
@@ -45,13 +45,7 @@ function DrawerBody({ id }: { id: string }) {
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <div className="space-y-4">
           <Card className="space-y-3 p-3">
-            <div className="grid h-44 place-items-center rounded-xl border border-dashed bg-muted text-center text-muted-foreground">
-              <div>
-                <Camera className="mx-auto mb-1 size-7" />
-                <p className="text-sm font-semibold">Photo pending</p>
-                <p className="font-mono text-xs">{alert.snapshot_path ?? 'no evidence file'}</p>
-              </div>
-            </div>
+            <Evidence alert={alert} />
             {hasCoords(alert) ? (
               <MiniMap lat={alert.latitude} lon={alert.longitude} color={alert.type === 'Heap' ? '#A63A14' : '#15508F'} />
             ) : (
@@ -226,5 +220,63 @@ function OverrideCard({ alert }: { alert: Alert }) {
       </div>
       <p className="mt-1.5 text-xs text-muted-foreground">Audited. Use only to correct a stuck alert.</p>
     </Card>
+  )
+}
+
+/** Detection evidence: snapshot photo + ~10 s clip, served by the
+ * backend only with the bearer token, so both are loaded as blobs.
+ * While the URLs are null the detector/gateway has not uploaded the
+ * files yet - the drawer polls, so they appear here automatically. */
+function Evidence({ alert }: { alert: Alert }) {
+  const snap = useMediaObjectUrl(alert.snapshot_url)
+  const clip = useMediaObjectUrl(alert.clip_url)
+
+  if (!alert.snapshot_url && !alert.clip_url) {
+    return (
+      <div className="grid h-44 place-items-center rounded-xl border border-dashed bg-muted text-center text-muted-foreground">
+        <div>
+          <Camera className="mx-auto mb-1 size-7" />
+          <p className="text-sm font-semibold">{alert.snapshot_path ? 'Photo pending' : 'No evidence'}</p>
+          <p className="font-mono text-xs">
+            {alert.snapshot_path ? 'evidence is being uploaded' : 'no evidence file'}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      {alert.snapshot_url &&
+        (snap.loading ? (
+          <Skeleton className="h-44" />
+        ) : snap.error || !snap.url ? (
+          <div className="grid h-44 place-items-center rounded-xl border border-dashed bg-muted text-center text-muted-foreground">
+            <p className="text-sm font-semibold">Photo could not be loaded</p>
+          </div>
+        ) : (
+          <figure>
+            <img
+              src={snap.url}
+              alt={`Detection photo for alert ${alert.alert_id}`}
+              className="max-h-80 w-full rounded-xl border bg-muted object-contain"
+            />
+            <figcaption className="mt-1 font-mono text-xs text-muted-foreground">{alert.snapshot_path}</figcaption>
+          </figure>
+        ))}
+      {alert.clip_url &&
+        (clip.loading ? (
+          <Skeleton className="h-44" />
+        ) : clip.error || !clip.url ? (
+          <div className="grid h-32 place-items-center rounded-xl border border-dashed bg-muted text-center text-muted-foreground">
+            <p className="text-sm font-semibold">Clip could not be loaded</p>
+          </div>
+        ) : (
+          <figure>
+            <video src={clip.url} controls preload="metadata" className="max-h-80 w-full rounded-xl border bg-black" />
+            <figcaption className="mt-1 font-mono text-xs text-muted-foreground">{alert.clip_path} · detection clip</figcaption>
+          </figure>
+        ))}
+    </div>
   )
 }

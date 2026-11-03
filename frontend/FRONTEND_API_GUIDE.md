@@ -112,6 +112,8 @@ screens should page with limit/offset; `total` is the full count.
   "road_segment": null, "chainage_m": null,
   "best_confidence": 0.87, "avg_confidence": 0.71,
   "snapshot_path": "EVT-0001_snapshot.jpg", "clip_path": null,
+  "snapshot_url": "/alerts/ALR-0042/snapshot",
+  "clip_url": "/alerts/ALR-0042/clip",
   "created_at": "…", "due_at": "…", "sla_state": "at_risk",
   "assigned_to": "R. Patil", "assignee_officer_id": 3,
   "assigned_at": "…", "closed_at": null, "closure_source": null,
@@ -120,12 +122,39 @@ screens should page with limit/offset; `total` is the full count.
   "last_detected_at": "…", "last_detected_run": "PCMC-14_…" }
 ```
 Notes: `road_segment` / `chainage_m` stay `null` until PCMC supplies
-road master data — render "—". `snapshot_path` is currently just the
-evidence filename on the gateway; **photo serving is not built yet**
-(treat as "photo pending" in the UI).
+road master data — render "—". `snapshot_path` / `clip_path` are the
+evidence filenames; the files themselves are served at
+`snapshot_url` / `clip_url` (next section). Either URL is `null`
+until the gateway has uploaded that file — usually seconds after
+the alert appears, so re-fetch the alert if you open the drawer
+very fast. Render a "photo pending" placeholder while `null`.
 
 ### GET /alerts/{alert_id}
 One alert (same object). `404` if unknown.
+
+### Alert evidence — photo & clip (drawer)
+
+| Method & path | Auth | Returns |
+|---|---|---|
+| GET /alerts/{id}/snapshot | Bearer (any role) | `image/jpeg` — the detection frame with the garbage box drawn. `404` while not uploaded. |
+| GET /alerts/{id}/clip | Bearer (any role) | `video/mp4` — ~10 s clip centred on the detection. `404` while not uploaded. |
+
+These endpoints need the `Authorization` header, so a plain
+`<img src="…">` will NOT work. Fetch through the api client as a
+blob and hand the object URL to the element:
+
+```ts
+// src/features/dashboard/api/media.ts
+export async function fetchMediaObjectUrl(path: string) {
+  const res = await api.get(path, { responseType: "blob" });
+  return URL.createObjectURL(res.data);
+}
+// <img src={await fetchMediaObjectUrl(alert.snapshot_url)} />
+// <video controls src={await fetchMediaObjectUrl(alert.clip_url)} />
+```
+
+Revoke the object URL (`URL.revokeObjectURL`) when the drawer
+closes to avoid leaking blobs during long control-room sessions.
 
 ### GET /alerts/{alert_id}/timeline
 The drawer's activity log:
@@ -277,6 +306,9 @@ own ward only — `403` for another ward's alert)
 - `POST /passes` — ingest gateway posts a run's GPS track
   `{ vehicle_id, run_id, points: [{latitude, longitude}] }`;
   triggers next-pass closure.
+- `POST /alerts/{id}/media` — ingest gateway uploads an alert's
+  evidence files right after ingest (multipart form:
+  `kind=snapshot|clip`, `file`). The UI never calls this.
 - `GET /health` — `{ ok, duplicate_radius_m, pass_radius_m,
   database }`.
 
@@ -284,5 +316,6 @@ own ward only — `403` for another ward's alert)
 
 *Backend source: `sprint3_backend_pg/` (this folder). Every endpoint
 above is covered by the automated suite in `tests/test_api.py`
-(30 scenarios, incl. auth/roles, vehicles, lifecycle, reports).
+(31 scenarios, incl. auth/roles, vehicles, lifecycle, reports,
+evidence media).
 OpenAPI docs are also live at `GET /docs` on the running server.*

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, EmptyState, Skeleton } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import { Table, Td, Th } from '@/components/ui/table'
 import { useVehicles, useWards } from '@/features/admin/hooks/useAdmin'
 import { cn, fmtDateTime } from '@/lib/utils'
@@ -31,14 +32,15 @@ export default function AlertsPage() {
   const [ward, setWard] = useState('')
   const [vehicle, setVehicle] = useState('')
   const [search, setSearch] = useState('')
+  const [showDuplicates, setShowDuplicates] = useState(false)
   const [page, setPage] = useState(0)
   const q = useDebounced(search)
   const openAlert = useUiStore((s) => s.openAlert)
 
   // any filter change returns to page 1
-  useEffect(() => setPage(0), [status, type, ward, vehicle, q])
+  useEffect(() => setPage(0), [status, type, ward, vehicle, q, showDuplicates])
 
-  const alerts = useAlerts({ status, type, ward_code: ward, vehicle_id: vehicle, q, limit: PAGE, offset: page * PAGE })
+  const alerts = useAlerts({ status, type, ward_code: ward, vehicle_id: vehicle, q, include_duplicates: showDuplicates, limit: PAGE, offset: page * PAGE })
   const wards = useWards()
   const vehicles = useVehicles({})
   const stats = useStats()
@@ -69,6 +71,10 @@ export default function AlertsPage() {
             <Select className="w-40" aria-label="Type" value={type} onChange={setType} options={[{ value: '', label: 'All types' }, { value: 'Heap', label: 'Heap' }, { value: 'Scattered litter', label: 'Scattered litter' }]} />
             <Select className="w-52" aria-label="Ward" value={ward} onChange={setWard} options={[{ value: '', label: 'All wards' }, ...(wards.data ?? []).map((w) => ({ value: w.ward_code, label: `${w.ward_code} · ${w.name}` }))]} />
             <Select className="w-40" aria-label="Vehicle" value={vehicle} onChange={setVehicle} options={[{ value: '', label: 'All vehicles' }, ...(vehicles.data ?? []).map((v) => ({ value: v.vehicle_id, label: v.label ?? v.vehicle_id }))]} />
+            <label className="flex h-9 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm" title="Repeat sightings within 25 m of an open alert are merged into it and hidden by default">
+              <Switch checked={showDuplicates} onCheckedChange={setShowDuplicates} aria-label="Show duplicates" />
+              <span>Duplicates {showDuplicates ? 'shown' : 'hidden'}</span>
+            </label>
           </div>
         </div>
 
@@ -86,7 +92,9 @@ export default function AlertsPage() {
             <tbody>
               {alerts.data.alerts.map((a) => (
                 <tr key={a.alert_id} tabIndex={0} onClick={() => openAlert(a.alert_id)} onKeyDown={(e) => e.key === 'Enter' && openAlert(a.alert_id)} className="cursor-pointer hover:bg-muted focus-visible:bg-muted">
-                  <Td className="font-mono font-medium">{a.alert_id}{a.seen_count > 1 && <span className="ml-1.5 font-sans text-xs text-muted-foreground">×{a.seen_count}</span>}</Td>
+                  <Td className="font-mono font-medium">{a.alert_id}{a.seen_count > 1 && <span className="ml-1.5 font-sans text-xs text-muted-foreground">×{a.seen_count}</span>}
+                    {a.duplicate_of && <p className="font-sans text-xs font-normal text-muted-foreground">merged into {a.duplicate_of}</p>}
+                  </Td>
                   <Td><TypeBadge type={a.type} /></Td>
                   <Td>
                     <p className="font-medium">{a.ward ?? a.ward_code ?? '—'}</p>

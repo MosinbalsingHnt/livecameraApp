@@ -119,6 +119,9 @@ function DrawerBody({ id }: { id: string }) {
   )
 }
 
+// the backend assigns New alerts and reassigns Assigned / In Progress ones; it returns 409 otherwise
+const ASSIGNABLE: Alert['status'][] = ['New', 'Assigned', 'In Progress']
+
 function Actions({ alert }: { alert: Alert }) {
   const role = useAuthStore((s) => s.user?.role)
   const canTriage = role === 'admin' || role === 'operator'
@@ -127,7 +130,7 @@ function Actions({ alert }: { alert: Alert }) {
 
   return (
     <>
-      {alert.status === 'New' && <AssignCard alert={alert} />}
+      {ASSIGNABLE.includes(alert.status) && <AssignCard key={alert.alert_id} alert={alert} />}
       {isOpen && <DismissCard alert={alert} />}
       <Card className="flex flex-wrap gap-2">
         {isOpen && alert.status !== 'New' && <CloseButton id={alert.alert_id} />}
@@ -142,18 +145,21 @@ function Actions({ alert }: { alert: Alert }) {
 function AssignCard({ alert }: { alert: Alert }) {
   const officers = useOfficers({ ward_code: alert.ward_code ?? undefined }, !!alert.ward_code)
   const assign = useAssign()
-  const [officerId, setOfficerId] = useState('')
+  const reassigning = !!alert.assigned_to
+  // start on the current officer: the default option is a label assignment that clears the officer link
+  const [officerId, setOfficerId] = useState(alert.assignee_officer_id != null ? String(alert.assignee_officer_id) : '')
   return (
     <Card>
-      <CardTitle className="text-sm">Assign</CardTitle>
+      <CardTitle className="text-sm">{reassigning ? 'Reassign' : 'Assign'}</CardTitle>
+      {reassigning && <p className="mb-2 text-sm text-muted-foreground">Currently: <span className="font-medium text-foreground">{alert.assigned_to}</span></p>}
       <Label>Officer in {alert.ward_code ?? 'ward'}</Label>
       <Select
         value={officerId}
         onChange={setOfficerId}
         options={[{ value: '', label: 'Ward sanitary officer (default)' }, ...(officers.data ?? []).map((o) => ({ value: String(o.officer_id), label: o.name }))]}
       />
-      <Button className="mt-3 w-full" loading={assign.isPending} onClick={() => assign.mutate({ id: alert.alert_id, officer_id: officerId ? Number(officerId) : undefined })}>
-        <UserPlus className="size-4" /> Assign and notify
+      <Button className="mt-3 w-full" loading={assign.isPending} onClick={() => assign.mutate({ id: alert.alert_id, officer_id: officerId ? Number(officerId) : undefined, reassign: reassigning })}>
+        <UserPlus className="size-4" /> {reassigning ? 'Reassign and notify' : 'Assign and notify'}
       </Button>
     </Card>
   )

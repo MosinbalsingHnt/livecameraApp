@@ -33,12 +33,12 @@ export const useStats = () => {
 }
 
 /** Wraps an alert action: toast result, then refresh everything an action can change. */
-function useAlertMutation<V>(fn: (v: V) => Promise<unknown>, success: string, idOf: (v: V) => string) {
+function useAlertMutation<V>(fn: (v: V) => Promise<unknown>, success: string | ((v: V) => string), idOf: (v: V) => string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: fn,
     onSuccess: (_d, v) => {
-      toast.success(success)
+      toast.success(typeof success === 'function' ? success(v) : success)
       const id = idOf(v)
       for (const key of [['alerts'], ['stats'], ['alert', id], ['timeline', id], ['audit'], ['officer-tasks'], ['hotspots'], ['reports']])
         qc.invalidateQueries({ queryKey: key })
@@ -48,7 +48,11 @@ function useAlertMutation<V>(fn: (v: V) => Promise<unknown>, success: string, id
 }
 
 export const useAssign = () =>
-  useAlertMutation((v: { id: string; officer_id?: number; assigned_to?: string }) => alertsApi.assign(v.id, { officer_id: v.officer_id, assigned_to: v.assigned_to }), 'Alert assigned', (v) => v.id)
+  useAlertMutation(
+    (v: { id: string; officer_id?: number; assigned_to?: string; reassign?: boolean }) => alertsApi.assign(v.id, { officer_id: v.officer_id, assigned_to: v.assigned_to }),
+    (v) => (v.reassign ? 'Alert reassigned' : 'Alert assigned'),
+    (v) => v.id,
+  )
 export const useCloseAlert = () => useAlertMutation((id: string) => alertsApi.close(id), 'Alert closed', (id) => id)
 export const useDismiss = () =>
   useAlertMutation((v: { id: string; reason: string }) => alertsApi.dismiss(v.id, v.reason), 'Alert dismissed. Reason saved.', (v) => v.id)
